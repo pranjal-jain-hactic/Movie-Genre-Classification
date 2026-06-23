@@ -110,7 +110,7 @@ Movie-Genre-Classification/
 
 ## 🎯 Prediction Result
 
-![Prediction Page](screenshots/prediction_page.png)
+![Prediction Page](screenshots/prediction_result.png)
 
 ---
 
