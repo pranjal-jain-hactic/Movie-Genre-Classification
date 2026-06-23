@@ -2,6 +2,7 @@ import streamlit as st
 import joblib
 import re
 import nltk
+import os
 import pandas as pd
 from nltk.corpus import stopwords
 
@@ -12,14 +13,32 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- NLTK ----------------
-nltk.download("stopwords")
+# ---------------- STOPWORDS ----------------
+try:
+    stop_words = set(stopwords.words("english"))
+except:
+    nltk.download("stopwords")
+    stop_words = set(stopwords.words("english"))
 
 # ---------------- LOAD MODEL ----------------
-model = joblib.load("../models/genre_model.pkl")
-tfidf = joblib.load("../models/tfidf.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-stop_words = set(stopwords.words("english"))
+model_path = os.path.join(
+    BASE_DIR,
+    "..",
+    "models",
+    "genre_model.pkl"
+)
+
+tfidf_path = os.path.join(
+    BASE_DIR,
+    "..",
+    "models",
+    "tfidf.pkl"
+)
+
+model = joblib.load(model_path)
+tfidf = joblib.load(tfidf_path)
 
 # ---------------- CUSTOM CSS ----------------
 st.markdown("""
@@ -65,7 +84,7 @@ st.sidebar.markdown("""
 
 ✅ TF-IDF Vectorization
 
-✅ Logistic Regression
+✅ Linear SVM
 
 ✅ Streamlit
 """)
@@ -74,7 +93,7 @@ st.sidebar.markdown("---")
 
 st.sidebar.metric("Movies", "54,214")
 st.sidebar.metric("Genres", "27")
-st.sidebar.metric("Accuracy", "58.4%")
+st.sidebar.metric("Accuracy", "57.0%")
 st.sidebar.metric("Features", "10,000")
 
 # ---------------- TEXT CLEANING ----------------
@@ -119,8 +138,6 @@ description = st.text_area(
     height=220,
     placeholder="Type the movie plot here..."
 )
-
-
 
 # ---------------- GENRE ICONS ----------------
 genre_icons = {
@@ -171,25 +188,6 @@ if st.button("🎯 Predict Genre", use_container_width=True):
             f"{icon} Predicted Genre: {genre.upper()}"
         )
 
-        # Top 3 Predictions
-        probabilities = model.predict_proba(vector)[0]
-
-        classes = model.classes_
-
-        top_indices = probabilities.argsort()[-3:][::-1]
-
-        st.subheader("🎯 Top 3 Predictions")
-
-        for idx in top_indices:
-
-            confidence = probabilities[idx]
-
-            st.write(
-                f"**{classes[idx].title()}** : {confidence * 100:.2f}%"
-            )
-
-            st.progress(float(confidence))
-
 # ---------------- METRICS ----------------
 st.markdown("---")
 
@@ -197,7 +195,7 @@ col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("Movies", "54K+")
 col2.metric("Genres", "27")
-col3.metric("Accuracy", "58.4%")
+col3.metric("Accuracy", "57.0%")
 col4.metric("Features", "10K")
 
 # ---------------- GENRE DISTRIBUTION ----------------
@@ -205,8 +203,15 @@ st.markdown("---")
 
 if st.checkbox("📊 Show Genre Distribution"):
 
+    data_path = os.path.join(
+        BASE_DIR,
+        "..",
+        "data",
+        "train_data.txt"
+    )
+
     df = pd.read_csv(
-        "../data/train_data.txt",
+        data_path,
         sep=" ::: ",
         names=["ID", "TITLE", "GENRE", "DESCRIPTION"],
         engine="python"
@@ -224,7 +229,7 @@ st.markdown("---")
 st.markdown(
     """
     <div class="footer">
-        Developed  with Machine Learning, NLP, and Streamlit
+        Developed with Machine Learning, NLP, and Streamlit
     </div>
     """,
     unsafe_allow_html=True
